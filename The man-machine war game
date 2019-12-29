@@ -1,0 +1,186 @@
+#include <cstdio>
+#include <iostream>
+#include <cmath>
+#include <algorithm>
+#include <string>
+#include <cstring>
+using namespace std;
+
+int health1 = 5, health2 = 5;
+int power1 = 0, power2 = 0;
+int cnt = 0;
+
+// 游戏介绍
+void intro()
+{
+    srand(time(NULL));
+    cout << endl << endl;
+    cout << "两人回合制游戏，每回合双方同时在“攻击、防御、集气、必杀”四种行动中选一种。" << endl << endl;
+    cout << "1. “生命”：每人 5 点生命，生命归 0 立即死亡；" << endl << endl;
+    cout << "2. “伤害”：攻击造成 1 伤害，防御免除攻击伤害，互相攻击双方都不受伤害，必杀造成 3 伤害；" << endl << endl;
+    cout << "3. “必杀”：必杀需消耗 2 “气”，双方同时必杀则相安无事，否则放必杀者给对手造成伤害，对手的行动无任何效果；" << endl << endl;
+    cout << "4. “气”：防御对方攻击增加 1 气，集气且不受到伤害增加 1 气。" << endl << endl;
+    cout << "----------单挑开始，你是武将1，电脑指挥武将2----------" << endl << endl;
+}
+
+// 确定人类策略
+namespace human
+{
+    int strategy()
+    {
+        // 输出出卡提示
+        cout << "用数字代表本回合武将1的行动：1攻击，2防御，3集气，4必杀" << endl;
+        // 读入人类策略
+        int x;
+        cin >> x;
+        return x;
+    }
+}
+
+// 确定电脑策略
+namespace ai
+{
+    int strategy()
+    {
+        if (power2 >= 2) return 4;
+        return rand() % 3 + 1;
+    }
+}
+
+// 根据双方行动, 执行一回合的对战
+void fight(int d1, int d2)
+{
+    if ((d1 == 4 && power1 < 2))
+    {
+        cout << "【【【武将1不够气来放必杀！重新开始回合" << cnt << "！】】】" << endl;
+        return;
+    }
+
+    cout << "【【【" ;
+    if (d1 == 1 && d2 == 1)
+    {
+        cout << "两人同时攻击，相安无事";
+    }
+    if (d1 == 1 && d2 == 2)
+    {
+        power2++;
+        cout << "武将2防御了武将1的攻击，得1气";
+    }
+    if (d1 == 2 && d2 == 1)
+    {
+        power1++;
+        cout << "武将1防御了武将2的攻击，得1气";
+    }
+    if (d1 == 2 && d2 == 2)
+    {
+        cout << "两人同时防御，相安无事";
+    }
+    if (d1 == 1 && d2 == 3)
+    {
+        health2--;
+        cout << "武将2集气时受到武将1的攻击，损失1生命";
+    }
+    if (d1 == 3 && d2 == 1)
+    {
+        health1--;
+        cout << "武将1集气时受到武将2的攻击，损失1生命";
+    }
+    if (d1 == 2 && d2 == 3)
+    {
+        power2++;
+        cout << "武将2趁武将1防御时集气，得1气";
+    }
+    if (d1 == 3 && d2 == 2)
+    {
+        power1++;
+        cout << "武将1趁武将2防御时集气，得1气";
+    }
+    if (d1 == 3 && d2 == 3)
+    {
+        power1++;
+        power2++;
+        cout << "双方同时集气，各得1气";
+    }
+    if (d1 == 4 && d2 != 4)
+    {
+        power1 -= 2;
+        health2 -= 3;
+        cout << "武将1使出必杀，对对手造成3伤害";
+    }
+    if (d1 != 4 && d2 == 4)
+    {
+        power2 -= 2;
+        health1 -= 3;
+        cout << "武将2使出必杀，对对手造成3伤害";
+    }
+    if (d1 == 4 && d2 == 4)
+    {
+        power1 -= 2;
+        power2 -= 2;
+        cout << "双方同时必杀，相安无事";
+    }
+    cout << "】】】" << endl;
+}
+
+// 本回合战后统计
+void result()
+{
+    cout << "【双方状态】" << endl;
+    cout << "*武将1：  生命" << health1 << "   气" << power1 << endl;
+    cout << "*武将2：  生命" << health2 << "   气" << power2 << endl << endl;
+}
+
+// 公布对战结果, winner == 1 代表武将1胜, winner == 2 代表武将2胜
+void showWinner(int winner)
+{
+    cout << endl << "【单挑结束！！！！！】" << endl;
+    //补充程序：winner == 1 代表武将1胜, winner == 2 代表武将2胜
+    if (winner == 1)
+    {
+        cout << "武将1击败对手获胜！！！！";
+    }
+    else
+    {
+        cout << "武将2击败对手获胜！！！！";
+    }
+    cout << endl << endl;
+}
+
+// 进行游戏
+int pk()
+{
+    int cnt = 0;
+    while (true)
+    {
+        // 一方倒下游戏结束
+        if (health1 <= 0) return 2;
+        if (health2 <= 0) return 1;
+
+        cout << "【开始回合" << ++cnt << "】" << endl;
+
+        // 确定人类策略
+        int human = human::strategy();
+        // 确定电脑策略
+        int ai = ai::strategy();
+        
+        // 对战
+        fight(human, ai);
+
+        // 本回合战后统计
+        result();
+    }
+}
+
+int main()
+{
+    // 游戏介绍
+    intro();
+
+    // 进行游戏
+    int winner = pk();
+
+    // 公布对战结果
+    showWinner(winner);
+
+    return 0;
+}
